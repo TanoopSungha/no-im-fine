@@ -27,7 +27,7 @@
   function portrait(look, w, h, f, opts) {
     const p = document.createElement('canvas'); p.width = w * 2; p.height = h * 2; const pc = p.getContext('2d'); pc.scale(2, 2);
     if (opts && opts.bg) { pc.fillStyle = opts.bg; pc.fillRect(0, 0, w, h); }
-    A.person(pc, look, w / 2, h * ((opts && opts.full) ? 1.0 : 1.42), h / ((opts && opts.full) ? 270 : 200), { face: f || 'happy', t: 0, arm: (opts && opts.arm) || 'idle' });
+    A.person(pc, look, w / 2, h * ((opts && opts.full) ? 1.0 : 1.66), h / ((opts && opts.full) ? 270 : 162), { face: f || 'happy', t: 0, arm: (opts && opts.arm) || 'idle' });
     return p;
   }
   function music() { if (!S) return; AU.play({ id: 'stage' + S.stage, genre: D.STAGE_MUSIC[S.stage], seed: 900 + S.stage * 77 }); }

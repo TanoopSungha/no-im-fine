@@ -30,12 +30,12 @@
 
   // Who you can fall for. role decides the words the game uses: girlfriend/boyfriend/partner.
   const PARTNERS = [
-    { id: 'jess', name: 'Jess', look: { skin: '#f6d3b3', hair: 'bob', hairCol: '#d84a2c', top: 'cardigan', col: '#ff8ac0', legs: '#2b3a67', acc: 'earrings', build: 0.9, h: 0.96 }, tint: '#ff8ac0', bio: 'Loves true crime, hates being asked "what\'s wrong?"' },
-    { id: 'dan', name: 'Dan', look: { skin: '#eebd94', hair: 'quiff', hairCol: '#3b2414', top: 'denim', col: '#4d6fa8', legs: '#222', acc: 'none', build: 1.1, h: 1.05 }, tint: '#7fc8ff', bio: 'Owns 14 identical t-shirts. Cries at dog adverts.' },
-    { id: 'priya', name: 'Priya', look: { skin: '#b97a4e', hair: 'long', hairCol: '#1c1410', top: 'shirt', col: '#f2a93b', legs: '#2b3a67', acc: 'earrings', build: 0.9, h: 0.98 }, tint: '#ffcf6a', bio: 'Has a spreadsheet for everything. Including you.' },
-    { id: 'marcus', name: 'Marcus', look: { skin: '#5f3a22', hair: 'short', hairCol: '#1c1410', top: 'hoodie', col: '#2fb35a', legs: '#2b3a67', acc: 'chain', build: 1.15, h: 1.06 }, tint: '#8ee06b', bio: 'Will fight you over the last roast potato.' },
-    { id: 'chloe', name: 'Chloe', look: { skin: '#ffd9c2', hair: 'bun', hairCol: '#e8c46a', top: 'tee', col: '#b14bff', legs: '#222', acc: 'glasses', build: 0.88, h: 0.94, pattern: 'stripes' }, tint: '#c99bff', bio: 'Remembers everything you have ever said. Everything.' },
-    { id: 'tom', name: 'Tom', look: { skin: '#d9a06f', hair: 'shaggy', hairCol: '#6b3d1f', top: 'tee', col: '#e5483b', legs: '#4a3b2a', acc: 'beard', build: 1.2, h: 1.04 }, tint: '#ff9a7a', bio: 'Thinks every dinner is a chance to try "a new hot sauce".' },
+    { id: 'jess', name: 'Jess', look: { skin: '#f6d3b3', hair: 'bob', hairCol: '#d84a2c', top: 'cardigan', col: '#ff8ac0', legs: '#2b3a67', acc: 'earrings', build: 0.9, h: 0.96 , eyes: '#3f7a4a', lashes: true, lips: '#d9506a'}, tint: '#ff8ac0', bio: 'Loves true crime, hates being asked "what\'s wrong?"' },
+    { id: 'dan', name: 'Dan', look: { skin: '#eebd94', hair: 'quiff', hairCol: '#3b2414', top: 'denim', col: '#4d6fa8', legs: '#222', acc: 'none', build: 1.1, h: 1.05 , eyes: '#3a6aa8'}, tint: '#7fc8ff', bio: 'Owns 14 identical t-shirts. Cries at dog adverts.' },
+    { id: 'priya', name: 'Priya', look: { skin: '#b97a4e', hair: 'long', hairCol: '#1c1410', top: 'shirt', col: '#f2a93b', legs: '#2b3a67', acc: 'earrings', build: 0.9, h: 0.98 , eyes: '#4a2a14', lashes: true, lips: '#b8405a'}, tint: '#ffcf6a', bio: 'Has a spreadsheet for everything. Including you.' },
+    { id: 'marcus', name: 'Marcus', look: { skin: '#5f3a22', hair: 'short', hairCol: '#1c1410', top: 'hoodie', col: '#2fb35a', legs: '#2b3a67', acc: 'chain', build: 1.15, h: 1.06 , eyes: '#3a2010'}, tint: '#8ee06b', bio: 'Will fight you over the last roast potato.' },
+    { id: 'chloe', name: 'Chloe', look: { skin: '#ffd9c2', hair: 'bun', hairCol: '#e8c46a', top: 'tee', col: '#b14bff', legs: '#222', acc: 'glasses', build: 0.88, h: 0.94, pattern: 'stripes' , eyes: '#3a7ab8', lashes: true, lips: '#e0607e'}, tint: '#c99bff', bio: 'Remembers everything you have ever said. Everything.' },
+    { id: 'tom', name: 'Tom', look: { skin: '#d9a06f', hair: 'shaggy', hairCol: '#6b3d1f', top: 'tee', col: '#e5483b', legs: '#4a3b2a', acc: 'beard', build: 1.2, h: 1.04 , eyes: '#5a7a3a'}, tint: '#ff9a7a', bio: 'Thinks every dinner is a chance to try "a new hot sauce".' },
   ];
   const ROLES = {
     girlfriend: { they: 'she', them: 'her', their: 'her', theyre: "she's", stages: ['girlfriend', 'girlfriend', 'girlfriend', 'fiancée', 'wife', 'wife', 'wife'] },
@@ -46,8 +46,8 @@
   // The supporting cast.
   const CAST = {
     steve: { name: 'Big Steve (your mate)', look: { skin: '#f0c9a8', hair: 'bald', hairCol: '#6b3d1f', top: 'tee', col: '#c3001b', legs: '#2b3a67', acc: 'beard', build: 1.4, h: 1.08, pattern: 'stripes' }, tint: '#ff7a6a' },
-    debbie: { name: 'Debbie (their best friend)', look: { skin: '#eebd94', hair: 'curly', hairCol: '#b5752f', top: 'sequin', col: '#ff5fa2', legs: '#222', acc: 'shades', build: 1, h: 0.98 }, tint: '#ff9fd0' },
-    linda: { name: 'Linda (their mum)', look: { skin: '#f6d3b3', hair: 'bun', hairCol: '#9a9a9a', top: 'cardigan', col: '#7a5ba8', legs: '#2b3a67', acc: 'glasses', build: 1.05, h: 0.92 }, tint: '#c9b0ff' },
+    debbie: { name: 'Debbie (their best friend)', look: { skin: '#eebd94', hair: 'curly', hairCol: '#b5752f', top: 'sequin', col: '#ff5fa2', legs: '#222', acc: 'shades', build: 1, h: 0.98, lips: '#e0306a' }, tint: '#ff9fd0' },
+    linda: { name: 'Linda (their mum)', look: { skin: '#f6d3b3', hair: 'bun', hairCol: '#9a9a9a', top: 'cardigan', col: '#7a5ba8', legs: '#2b3a67', acc: 'glasses', build: 1.05, h: 0.92, lashes: true, lips: '#b8405a', eyes: '#4a6a8a' }, tint: '#c9b0ff' },
     pat: { name: 'Pat (your mum)', look: { skin: '#d9a06f', hair: 'curly', hairCol: '#d9d9d9', top: 'cardigan', col: '#2f9bff', legs: '#2b3a67', acc: 'earrings', build: 1.1, h: 0.9 }, tint: '#9fd2ff' },
     gary: { name: 'Gary (your boss)', look: { skin: '#f0c9a8', hair: 'bald', hairCol: '#9a9a9a', top: 'suit', col: '#3a3a44', legs: '#2a2a30', acc: 'glasses', build: 1.25, h: 1.04 }, tint: '#b8c0cc' },
     waiter: { name: 'The waiter', look: { skin: '#b97a4e', hair: 'short', hairCol: '#1c1410', top: 'suit', col: '#1b1b24', legs: '#1b1b24', acc: 'none', build: 0.95, h: 1.02 }, tint: '#e9d9b0' },

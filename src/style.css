@@ -59,7 +59,7 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 @keyframes pop { from { transform: translateX(-50%) scale(.6); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
 
 /* ---------- toasts ---------- */
-#toasts { display: flex; flex-direction: column-reverse; align-items: center; justify-content: flex-start; gap: 8px; padding-top: 600px; }
+#toasts { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding: 132px 14px 0 0; }
 .toast { background: var(--cream); border: 3px solid var(--ink); border-radius: 16px; padding: 8px 16px; font-size: 17px; box-shadow: 0 4px 0 var(--ink); animation: toast 2.8s forwards; text-align: center; }
 .toast.pink { background: #ffc2de; } .toast.gold { background: #ffe58a; }
 @keyframes toast { 0% { opacity: 0; transform: translateY(-16px); } 10% { opacity: 1; transform: none; } 85% { opacity: 1; } 100% { opacity: 0; } }
