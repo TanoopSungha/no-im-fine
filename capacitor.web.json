@@ -1,0 +1,1 @@
+{ "from": "src", "include": ["index.html", "style.css", "assets", "data.js", "cards.js", "engine.js", "art.js", "audio.js", "ui.js"], "layoutWidth": 1100 }

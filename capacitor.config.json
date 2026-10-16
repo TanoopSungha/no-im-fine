@@ -1,0 +1,8 @@
+{
+  "appId": "com.snoopster.noimfine",
+  "appName": "No, I'm Fine.",
+  "webDir": "www",
+  "backgroundColor": "#3a1030",
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "never" }
+}
