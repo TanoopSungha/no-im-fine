@@ -97,17 +97,40 @@
 
   // ---------- the card table ----------
   function buildHud() {
-    hud.innerHTML = `<div class="meters">${D.METERS.map(m => `<div class="meter" data-m="${m.id}"><div class="dot"></div><div class="jar"><div class="fill" style="background:${m.col}"></div><div class="ic">${m.icon}</div></div><div class="lbl">${m.name}</div></div>`).join('')}</div>
+    hud.innerHTML = `<div class="meters">${D.METERS.map(m => `<div class="meter" data-m="${m.id}" title="${esc(m.name)}"><div class="dot"></div><div class="jar"><div class="fill" style="background:${m.col}"></div><div class="ic">${m.icon}</div><div class="pct">50%</div></div><div class="lbl">${m.name}</div></div>`).join('')}</div>
       <div class="chip daychip"><b>Day ${S.day}</b><small>${D.STAGES[S.stage].name}</small></div>
+      <div class="chip vibechip" id="vibeChip"></div>
       <div class="items"></div><div class="streak" style="display:none"></div>
       <div class="timeline">${D.STAGES.map((st, i) => `<div class="tl-stop" style="left:${st.from / D.WIN_DAY * 100}%"><i></i><span>${st.name}</span></div>`).join('')}<div class="tl-stop" style="left:100%"><i></i><span>Forever</span></div><div class="tl-fill"></div><div class="tl-heart">❤️</div></div>
       <button class="small ghost mute" data-a="mute" title="Mute / Unmute (M)">${AU.muted ? '🔇' : '🔊'}</button>`;
     updateHud();
   }
+  function vibeStatus() {
+    if (!S) return { icon: '✨', label: 'Sweet spot', cls: 'good' };
+    const m = S.m;
+    if (m.pat < 22) return { icon: '💣', label: 'Walking on eggshells', cls: 'danger' };
+    if (m.san < 22) return { icon: '🌀', label: 'Spiralling fast', cls: 'danger' };
+    if (m.love < 22) return { icon: '🧊', label: 'Frosty silence', cls: 'danger' };
+    if (m.cash < 22) return { icon: '💸', label: 'Card declined energy', cls: 'danger' };
+    if (m.love > 80) return { icon: '🥺', label: 'Dangerously clingy', cls: 'warn' };
+    if (m.pat > 80) return { icon: '😇', label: 'Suspiciously saintly', cls: 'warn' };
+    if (m.san > 80) return { icon: '🧘', label: 'Too zen to care', cls: 'warn' };
+    if (m.cash > 80) return { icon: '🎩', label: 'Flashy spender alert', cls: 'warn' };
+    if (S.streak >= 4) return { icon: '🔥', label: 'Couple goals!', cls: 'hot' };
+    return { icon: '💖', label: 'Cozy & balanced', cls: 'good' };
+  }
   function updateHud() {
     if (!S || !hud.firstChild) return;
-    for (const m of D.METERS) { const el = hud.querySelector(`[data-m="${m.id}"]`); if (!el) continue; const v = S.m[m.id]; el.querySelector('.fill').style.height = v + '%'; el.classList.toggle('danger', v < 18 || v > 82); }
+    for (const m of D.METERS) {
+      const el = hud.querySelector(`[data-m="${m.id}"]`); if (!el) continue;
+      const v = Math.round(S.m[m.id]);
+      el.querySelector('.fill').style.height = v + '%';
+      const pctEl = el.querySelector('.pct'); if (pctEl) pctEl.textContent = v + '%';
+      el.classList.toggle('danger', v < 18 || v > 82);
+    }
     const dc = hud.querySelector('.daychip'); if (dc) dc.innerHTML = `<b>Day ${S.day}</b><small>${D.STAGES[S.stage].name} · ${D.ROLES[S.partner.role].stages[S.stage]}: ${esc(S.partner.name)}</small>`;
+    const vc = hud.querySelector('#vibeChip');
+    if (vc) { const vb = vibeStatus(); vc.className = 'chip vibechip ' + vb.cls; vc.innerHTML = `<span>${vb.icon}</span> <b>${esc(vb.label)}</b>`; }
     const tl = hud.querySelector('.timeline'); if (tl) { const k = Math.min(100, S.day / D.WIN_DAY * 100); tl.querySelector('.tl-fill').style.width = k + '%'; tl.querySelector('.tl-heart').style.left = k + '%'; }
     const its = hud.querySelector('.items'); if (its) its.innerHTML = [0, 1, 2].map(i => S.items[i] ? `<button class="it" data-item="${i}" title="${esc(D.ITEMS[S.items[i]].name)} (${i + 1}): ${esc(D.ITEMS[S.items[i]].desc)}">${D.ITEMS[S.items[i]].icon}</button>` : '<div class="it empty"></div>').join('');
     const st = hud.querySelector('.streak'); if (st) { st.style.display = S.streak >= 3 ? '' : 'none'; st.textContent = `🔥 ${S.streak} in a row`; }

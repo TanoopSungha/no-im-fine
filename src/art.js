@@ -413,8 +413,28 @@
     c.globalAlpha = 0.18; c.fillStyle = '#fff'; for (let i = 0; i < 16; i++) { const a = i / 16 * TAU + (o.t || 0) * 0.08; c.beginPath(); c.moveTo(w / 2, h * 0.42); c.lineTo(w / 2 + Math.cos(a) * w, h * 0.42 + Math.sin(a) * w); c.lineTo(w / 2 + Math.cos(a + 0.18) * w, h * 0.42 + Math.sin(a + 0.18) * w); c.fill(); } c.globalAlpha = 1;
     const leanNum = o.lean === 'L' ? -1 : o.lean === 'R' ? 1 : 0;
     const autoArm = o.arm || (o.face === 'cross' || o.face === 'angry' ? 'cross' : o.face === 'sus' ? 'think' : o.face === 'wow' || o.face === 'joy' ? 'cheer' : o.face === 'meh' ? 'shrug' : o.face === 'sad' ? 'facepalm' : leanNum ? 'wave' : 'idle');
+    // expressive mood halo behind character
+    if (o.face === 'love' || o.face === 'joy' || o.face === 'angry' || o.face === 'sus') {
+      const auraCol = o.face === 'love' ? 'rgba(255,63,127,.34)' : o.face === 'joy' ? 'rgba(255,215,70,.34)' : o.face === 'angry' ? 'rgba(229,72,59,.38)' : 'rgba(57,208,184,.28)';
+      const ag = c.createRadialGradient(w / 2, h * 0.44, 18, w / 2, h * 0.44, w * 0.48);
+      ag.addColorStop(0, auraCol); ag.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = ag; c.beginPath(); c.arc(w / 2, h * 0.44, w * 0.48, 0, TAU); c.fill();
+    }
     if (o.cat) cat(c, w / 2 - 20, h * 0.86, 2.6, o.t || 0, leanNum < 0, false);
     else if (o.look) person(c, o.look, w / 2, h * 1.78, h / 158, { face: o.face, arm: autoArm, t: o.t, blink: o.blink, look: leanNum * 1.6, lean: leanNum, groove: o.groove });
+    // subtle floating mood glyphs on card
+    if (o.face === 'love' || o.face === 'angry' || o.face === 'sus') {
+      const sym = o.face === 'love' ? '♥' : o.face === 'angry' ? '💢' : '❓';
+      c.save(); c.font = '700 20px Fredoka, sans-serif'; c.fillStyle = o.face === 'love' ? '#ff3f7f' : '#fff';
+      for (let k = 0; k < 3; k++) {
+        const ph = (o.t || 0) * 1.8 + k * 2.1;
+        const gx = w * 0.2 + (k * 0.3) * w + Math.sin(ph) * 10;
+        const gy = h * 0.26 - ((ph * 18) % 42);
+        c.globalAlpha = 0.55 + 0.35 * Math.sin(ph);
+        c.fillText(sym, gx, gy);
+      }
+      c.restore();
+    }
     if (o.badge) {
       c.save();
       const isL = o.lean === 'L';

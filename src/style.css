@@ -27,7 +27,10 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .meter { position: relative; width: 66px; text-align: center; }
 .meter .jar { position: relative; width: 58px; height: 58px; margin: 0 auto; border-radius: 16px; border: 3px solid var(--ink); background: rgba(255,244,220,.9); overflow: hidden; box-shadow: 0 3px 0 var(--ink); }
 .meter .fill { position: absolute; left: 0; right: 0; bottom: 0; transition: height .6s cubic-bezier(.3,1.4,.6,1); opacity: .85; }
-.meter .ic { position: absolute; inset: 0; display: grid; place-items: center; font-size: 28px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.25)); }
+.meter .ic { position: absolute; inset: 0; display: grid; place-items: center; font-size: 28px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.25)); transition: transform .15s; }
+.meter .pct { position: absolute; inset: auto 0 2px 0; font-size: 10px; font-weight: 800; color: var(--ink); opacity: 0; transition: opacity .15s; text-shadow: 0 1px 0 rgba(255,255,255,.8); }
+.meter:hover .pct, .meter.danger .pct { opacity: 1; }
+.meter:hover .ic, .meter.danger .ic { transform: translateY(-4px) scale(.92); }
 .meter .lbl { font-size: 11px; color: var(--cream); margin-top: 4px; text-shadow: 0 1px 0 var(--ink); white-space: nowrap; }
 .meter .dot { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); border-radius: 50%; background: #fff; border: 2px solid var(--ink); opacity: 0; transition: opacity .15s; }
 .meter .dot.s1 { width: 10px; height: 10px; opacity: 1; } .meter .dot.s2 { width: 16px; height: 16px; top: -15px; opacity: 1; }
@@ -40,6 +43,12 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .chip b { font-size: 20px; }
 .daychip { left: 12px; top: 12px; line-height: 1.15; }
 .daychip small { display: block; font-size: 12px; color: #7a3c5c; }
+.vibechip { left: 12px; top: 72px; display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 3px 10px; border-radius: 12px; }
+.vibechip b { font-size: 13px; }
+.vibechip.good { background: #e2f9d8; }
+.vibechip.warn { background: #ffe8a8; }
+.vibechip.danger { background: #ffc2cc; animation: danger .6s infinite alternate; }
+.vibechip.hot { background: #ffd0ea; }
 .items { position: absolute; right: 12px; top: 12px; display: flex; gap: 6px; }
 .items .it { width: 50px; height: 50px; border-radius: 14px; border: 3px solid var(--ink); background: var(--cream); font-size: 26px; display: grid; place-items: center; box-shadow: 0 3px 0 var(--ink); cursor: pointer; padding: 0; }
 .items .it.empty { opacity: .35; cursor: default; }
