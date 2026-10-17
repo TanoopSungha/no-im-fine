@@ -45,13 +45,13 @@
 
   // The supporting cast.
   const CAST = {
-    steve: { name: 'Big Steve (your mate)', look: { skin: '#f0c9a8', hair: 'bald', hairCol: '#6b3d1f', top: 'tee', col: '#c3001b', legs: '#2b3a67', acc: 'beard', build: 1.4, h: 1.08, pattern: 'stripes' }, tint: '#ff7a6a' },
-    debbie: { name: 'Debbie (their best friend)', look: { skin: '#eebd94', hair: 'curly', hairCol: '#b5752f', top: 'sequin', col: '#ff5fa2', legs: '#222', acc: 'shades', build: 1, h: 0.98, lips: '#e0306a' }, tint: '#ff9fd0' },
+    steve: { name: 'Big Steve (your mate)', look: { skin: '#f0c9a8', hair: 'bald', hairCol: '#6b3d1f', top: 'tee', col: '#c3001b', legs: '#2b3a67', acc: 'beard', build: 1.4, h: 1.08, pattern: 'stripes', eyes: '#5a7848' }, tint: '#ff7a6a' },
+    debbie: { name: 'Debbie (their best friend)', look: { skin: '#eebd94', hair: 'curly', hairCol: '#b5752f', top: 'sequin', col: '#ff5fa2', legs: '#222', acc: 'shades', build: 1, h: 0.98, lips: '#e0306a', lashes: true, eyes: '#4880b8' }, tint: '#ff9fd0' },
     linda: { name: 'Linda (their mum)', look: { skin: '#f6d3b3', hair: 'bun', hairCol: '#9a9a9a', top: 'cardigan', col: '#7a5ba8', legs: '#2b3a67', acc: 'glasses', build: 1.05, h: 0.92, lashes: true, lips: '#b8405a', eyes: '#4a6a8a' }, tint: '#c9b0ff' },
-    pat: { name: 'Pat (your mum)', look: { skin: '#d9a06f', hair: 'curly', hairCol: '#d9d9d9', top: 'cardigan', col: '#2f9bff', legs: '#2b3a67', acc: 'earrings', build: 1.1, h: 0.9 }, tint: '#9fd2ff' },
-    gary: { name: 'Gary (your boss)', look: { skin: '#f0c9a8', hair: 'bald', hairCol: '#9a9a9a', top: 'suit', col: '#3a3a44', legs: '#2a2a30', acc: 'glasses', build: 1.25, h: 1.04 }, tint: '#b8c0cc' },
-    waiter: { name: 'The waiter', look: { skin: '#b97a4e', hair: 'short', hairCol: '#1c1410', top: 'suit', col: '#1b1b24', legs: '#1b1b24', acc: 'none', build: 0.95, h: 1.02 }, tint: '#e9d9b0' },
-    tyler: { name: 'Tyler (your kid)', look: { skin: '#e9b98f', hair: 'spiky', hairCol: '#6b3d1f', top: 'tee', col: '#ffcf3f', legs: '#2f9bff', acc: 'none', build: 0.8, h: 0.66 }, tint: '#ffe28a' },
+    pat: { name: 'Pat (your mum)', look: { skin: '#d9a06f', hair: 'curly', hairCol: '#d9d9d9', top: 'cardigan', col: '#2f9bff', legs: '#2b3a67', acc: 'earrings', build: 1.1, h: 0.9, lashes: true, lips: '#c0606a', eyes: '#5a7048' }, tint: '#9fd2ff' },
+    gary: { name: 'Gary (your boss)', look: { skin: '#f0c9a8', hair: 'bald', hairCol: '#9a9a9a', top: 'suit', col: '#3a3a44', legs: '#2a2a30', acc: 'glasses', build: 1.25, h: 1.04, eyes: '#606870' }, tint: '#b8c0cc' },
+    waiter: { name: 'The waiter', look: { skin: '#b97a4e', hair: 'short', hairCol: '#1c1410', top: 'suit', col: '#1b1b24', legs: '#1b1b24', acc: 'none', build: 0.95, h: 1.02, eyes: '#382418' }, tint: '#e9d9b0' },
+    tyler: { name: 'Tyler (your kid)', look: { skin: '#e9b98f', hair: 'spiky', hairCol: '#6b3d1f', top: 'tee', col: '#ffcf3f', legs: '#2f9bff', acc: 'none', build: 0.8, h: 0.66, eyes: '#426b8c' }, tint: '#ffe28a' },
     biscuit: { name: 'Biscuit (the cat)', cat: true, tint: '#ffcf8a' },
   };
 

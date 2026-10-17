@@ -13,7 +13,8 @@
   let S = null, meta = E.loadMeta(), mode = 'title', t = 0, last = performance.now();
   let pick = { partner: 'jess', role: 'girlfriend' };
   let cardV = { x: 0, rot: 0, scale: 1, tx: 0, trot: 0, tscale: 1, flip: 1 };
-  let drag = null, lean = null, face = 'talk', replyTimer = null, mg = null, pending = null;
+  let drag = null, lean = null, face = 'talk', replyTimer = null, mg = null, pending = null, beatPulse = 0;
+  AU.onBeat = v => { beatPulse = Math.max(beatPulse, v || 0.7); };
 
   function fit() { const s = Math.min(innerWidth / W, innerHeight / H); stage.style.transform = `scale(${s})`; }
   addEventListener('resize', fit); fit();
@@ -21,8 +22,8 @@
   const fmt = s => S ? E.fmt(S, s) : s;
   const partnerDef = () => D.PARTNERS.find(p => p.id === S.partner.id);
   function speakerOf(who) {
-    if (who === 'p') { const P = partnerDef(); return { look: P.look, tint: P.tint, name: `${P.name} (your ${D.ROLES[S.partner.role].stages[S.stage]})` }; }
-    const cst = D.CAST[who]; return { look: cst.look, tint: cst.tint, name: cst.name, cat: cst.cat };
+    if (who === 'p') { const P = partnerDef(); return { id: P.id, look: P.look, tint: P.tint, name: `${P.name} (your ${D.ROLES[S.partner.role].stages[S.stage]})` }; }
+    const cst = D.CAST[who]; return { id: who, look: cst.look, tint: cst.tint, name: cst.name, cat: cst.cat };
   }
   function portrait(look, w, h, f, opts) {
     const p = document.createElement('canvas'); p.width = w * 2; p.height = h * 2; const pc = p.getContext('2d'); pc.scale(2, 2);
@@ -73,17 +74,17 @@
       <div class="partners">${D.PARTNERS.map(p => `<div class="pcard ${pick.partner === p.id ? 'on' : ''}" data-partner="${p.id}"><div class="pic"></div><b>${p.name}</b><p>${esc(p.bio)}</p></div>`).join('')}</div>
       <div class="row roles"><span style="color:var(--cream)">They are my</span>${Object.keys(D.ROLES).map(r => `<button class="small ${pick.role === r ? 'on' : 'ghost'}" data-role="${r}">${r}</button>`).join('')}</div>
       <div class="row"><button class="ghost" data-a="back">Back</button><button class="pink" data-a="start">Let's do this ❤</button></div></div>`;
-    for (const el of screen.querySelectorAll('[data-partner]')) { const P = D.PARTNERS.find(p => p.id === el.dataset.partner); el.querySelector('.pic').appendChild(portrait(P.look, 150, 180, pick.partner === P.id ? 'love' : 'happy', { bg: P.tint })); }
+    for (const el of screen.querySelectorAll('[data-partner]')) { const P = D.PARTNERS.find(p => p.id === el.dataset.partner); el.querySelector('.pic').appendChild(portrait(P.look, 150, 180, pick.partner === P.id ? 'love' : 'happy', { bg: P.tint, arm: pick.partner === P.id ? 'wave' : 'idle' })); }
   }
 
   function showHow() {
     screen.innerHTML = `<div class="panel"><div class="card howto"><h2>How not to get dumped</h2><ul>
-      <li>People say things. Swipe the card <b>left or right</b> (or tap a choice, or use the arrow keys) to answer.</li>
+      <li>People say things. Swipe the card <b>left or right</b> (or tap a choice, or use <b>◀ / ▶</b> or <b>A / D</b>) to answer.</li>
       <li>Keep all four meters alive: <b>❤️ Romance</b>, <b>⏳ Their patience</b>, <b>🧠 Your sanity</b> and <b>💷 the joint account</b>.</li>
       <li>Too low ends it. <b>Too high ends it too.</b> Nobody likes a clingy, broke, zen saint.</li>
       <li>Dots above the meters show what a choice will affect (big dot, big change), but not which way. Good luck.</li>
       <li>Every few cards there's a quick-fire challenge: decode "I'm fine", survive "where do you want to eat?", say "mm-hmm" at the right moment, win the duvet war...</li>
-      <li>Earn get-out-of-jail cards (💐 🍫 🧘 📱) with good streaks and perfect challenges. Tap them at the top right.</li>
+      <li>Earn get-out-of-jail cards (💐 🍫 🧘 📱) with good streaks and perfect challenges. Tap them at the top right (or press <b>1–3</b>).</li>
       <li>Make it from first date to the golden years. Collect every breakup on the way.</li></ul>
       <div class="row"><button data-a="back">Got it</button></div></div></div>`;
   }
@@ -100,7 +101,7 @@
       <div class="chip daychip"><b>Day ${S.day}</b><small>${D.STAGES[S.stage].name}</small></div>
       <div class="items"></div><div class="streak" style="display:none"></div>
       <div class="timeline">${D.STAGES.map((st, i) => `<div class="tl-stop" style="left:${st.from / D.WIN_DAY * 100}%"><i></i><span>${st.name}</span></div>`).join('')}<div class="tl-stop" style="left:100%"><i></i><span>Forever</span></div><div class="tl-fill"></div><div class="tl-heart">❤️</div></div>
-      <button class="small ghost mute" data-a="mute">${AU.muted ? '🔇' : '🔊'}</button>`;
+      <button class="small ghost mute" data-a="mute" title="Mute / Unmute (M)">${AU.muted ? '🔇' : '🔊'}</button>`;
     updateHud();
   }
   function updateHud() {
@@ -108,7 +109,7 @@
     for (const m of D.METERS) { const el = hud.querySelector(`[data-m="${m.id}"]`); if (!el) continue; const v = S.m[m.id]; el.querySelector('.fill').style.height = v + '%'; el.classList.toggle('danger', v < 18 || v > 82); }
     const dc = hud.querySelector('.daychip'); if (dc) dc.innerHTML = `<b>Day ${S.day}</b><small>${D.STAGES[S.stage].name} · ${D.ROLES[S.partner.role].stages[S.stage]}: ${esc(S.partner.name)}</small>`;
     const tl = hud.querySelector('.timeline'); if (tl) { const k = Math.min(100, S.day / D.WIN_DAY * 100); tl.querySelector('.tl-fill').style.width = k + '%'; tl.querySelector('.tl-heart').style.left = k + '%'; }
-    const its = hud.querySelector('.items'); if (its) its.innerHTML = [0, 1, 2].map(i => S.items[i] ? `<button class="it" data-item="${i}" title="${esc(D.ITEMS[S.items[i]].name)}: ${esc(D.ITEMS[S.items[i]].desc)}">${D.ITEMS[S.items[i]].icon}</button>` : '<div class="it empty"></div>').join('');
+    const its = hud.querySelector('.items'); if (its) its.innerHTML = [0, 1, 2].map(i => S.items[i] ? `<button class="it" data-item="${i}" title="${esc(D.ITEMS[S.items[i]].name)} (${i + 1}): ${esc(D.ITEMS[S.items[i]].desc)}">${D.ITEMS[S.items[i]].icon}</button>` : '<div class="it empty"></div>').join('');
     const st = hud.querySelector('.streak'); if (st) { st.style.display = S.streak >= 3 ? '' : 'none'; st.textContent = `🔥 ${S.streak} in a row`; }
   }
   function showDots(prev) { for (const m of D.METERS) { const d = hud.querySelector(`[data-m="${m.id}"] .dot`); if (d) d.className = 'dot' + (prev && prev[m.id] ? ' s' + prev[m.id] : ''); } }
@@ -138,19 +139,22 @@
   function showCard() {
     mode = 'card';
     const card = E.cardById(S.cur.id), sp = speakerOf(card.who);
-    face = 'talk'; setTimeout(() => { if (mode === 'card') face = 'neutral'; }, 900);
-    play.innerHTML = `<div class="question">“${esc(fmt(card.text))}”</div>
-      <button class="choice l" data-side="L"><span class="arr">◀ swipe left</span>${esc(fmt(card.L[0]))}</button>
-      <button class="choice r" data-side="R"><span class="arr">swipe right ▶</span>${esc(fmt(card.R[0]))}</button>`;
+    const text = fmt(card.text);
+    const dur = AU.speak(text, { id: sp.id, mood: 'talk' });
+    face = 'talk'; setTimeout(() => { if (mode === 'card') face = 'neutral'; }, Math.max(900, dur * 1000));
+    play.innerHTML = `<div class="question">“${esc(text)}”</div>
+      <button class="choice l" data-side="L"><span class="arr">◀ swipe left (A)</span>${esc(fmt(card.L[0]))}</button>
+      <button class="choice r" data-side="R"><span class="arr">swipe right (D) ▶</span>${esc(fmt(card.R[0]))}</button>`;
     for (const b of play.querySelectorAll('.choice')) {
       b.addEventListener('pointerenter', () => { lean = b.dataset.side; showDots(E.preview(card, lean)); b.classList.add('lean'); });
       b.addEventListener('pointerleave', () => { if (!drag) { lean = null; showDots(null); } b.classList.remove('lean'); });
     }
   }
-  
+
   function choose(side) {
     if (mode !== 'card') return;
     AU.init();
+    const card = E.cardById(S.cur.id), sp = speakerOf(card.who);
     mode = 'reply';
     const res = E.choose(S, side);
     if (!res) return;
@@ -159,7 +163,8 @@
     face = res.face; cardV.tx = 0; cardV.trot = 0; burst(res.face); cardV.scale = 1.06;
     const good = res.face === 'love' || res.face === 'joy' || res.face === 'happy' || res.face === 'smug';
     AU.sfx(good ? (res.face === 'love' ? 'heart' : 'pop') : res.face === 'angry' ? 'fail' : 'click');
-    play.innerHTML = `<div class="reply">${esc(res.reply)}<small>tap to carry on</small></div>`;
+    AU.speak(res.reply, { id: sp.id, mood: res.face });
+    play.innerHTML = `<div class="reply">${esc(res.reply)}<small>tap or Space to carry on</small></div>`;
     showDeltas(res.deltas);
     if (res.item) toast(`Streak bonus! You got <b>${D.ITEMS[res.item].icon} ${esc(D.ITEMS[res.item].name)}</b>`, 'gold');
     pending = res;
@@ -180,7 +185,7 @@
   function showStage(st) {
     mode = 'stage'; play.innerHTML = '';
     AU.sfx('level'); music(); buildHud();
-    screen.innerHTML = `<div class="panel stageup" data-a="stagego"><div class="small">Day ${S.day} together</div><div class="big">${esc(st.name)}</div><div class="small">${esc(st.blurb)}</div><div class="small" style="font-size:15px;opacity:.8;margin-top:20px">Tap to carry on</div></div>`;
+    screen.innerHTML = `<div class="panel stageup" data-a="stagego"><div class="small">Day ${S.day} together</div><div class="big">${esc(st.name)}</div><div class="small">${esc(st.blurb)}</div><div class="small" style="font-size:15px;opacity:.8;margin-top:20px">Tap or Space to carry on</div></div>`;
   }
 
   function showEnding(key) {
@@ -188,6 +193,8 @@
     const e = D.ENDINGS[key], isNew = !meta.endings[key];
     meta = E.finish(meta, S); E.saveMeta(meta); E.wipe();
     AU.sfx(key === 'golden' ? 'legend' : 'fail'); AU.stop();
+    const P = partnerDef();
+    AU.speak(fmt(e.text), { id: P.id, mood: key === 'golden' ? 'joy' : 'sad' });
     face = key === 'golden' ? 'love' : 'angry';
     if (key === 'golden') for (let i = 0; i < 80; i++) parts.push({ x: Math.random() * W, y: -20 - Math.random() * 300, vx: (Math.random() - 0.5) * 60, vy: 60 + Math.random() * 120, life: 6, e: ['❤️', '🎉', '✨', '💐'][i % 4], s: 22 + Math.random() * 20 });
     screen.innerHTML = `<div class="panel"><div class="card ending" style="display:flex;gap:22px;align-items:center;max-width:900px;text-align:left"><div id="endPic"></div><div><div class="ic">${e.icon}</div><h2>${esc(e.title)}</h2>${isNew ? '<div style="color:var(--hot);font-weight:700">NEW ENDING UNLOCKED</div>' : ''}
@@ -195,7 +202,7 @@
       <div class="stats"><div><b>${S.day}</b>days together</div><div><b>${D.STAGES[S.stage].name}</b>got as far as</div><div><b>${S.bestStreak}</b>best streak</div><div><b>${Object.keys(meta.endings).length}/${Object.keys(D.ENDINGS).length}</b>endings found</div></div>
       ${S.day >= meta.best && meta.runs > 1 ? '<div style="font-weight:700">🏆 Your longest relationship yet!</div>' : `<div>Your record: ${meta.best} days</div>`}
       <div class="row" style="margin-top:12px"><button class="pink" data-a="again">Try again with ${esc(S.partner.name)}</button><button class="ghost" data-a="pick">Someone new</button><button class="ghost" data-a="title">Menu</button></div></div></div></div>`;
-    const P = partnerDef(); $('#endPic').appendChild(Object.assign(portrait(P.look, 230, 300, key === 'golden' ? 'love' : key.startsWith('love1') ? 'love' : 'angry', { bg: P.tint, full: true, arm: key === 'golden' ? 'wave' : 'cross' }), { style: 'width:230px;height:300px;border-radius:22px;border:4px solid #2a1a24;flex:none' }));
+    $('#endPic').appendChild(Object.assign(portrait(P.look, 230, 300, key === 'golden' ? 'love' : key.startsWith('love1') ? 'love' : 'angry', { bg: P.tint, full: true, arm: key === 'golden' ? 'wave' : 'cross' }), { style: 'width:230px;height:300px;border-radius:22px;border:4px solid #2a1a24;flex:none' }));
   }
 
   // ---------- microgames ----------
@@ -213,10 +220,12 @@
     const res = E.gameResult(S, id, Math.max(0, Math.min(1, score)));
     E.save(S);
     const box = play.querySelector('.mg');
-    const win = res.win;
+    const win = res.win, P = partnerDef();
     AU.sfx(win ? (res.perfect ? 'legend' : 'level') : 'fail');
+    const line = win ? fmt(pickLine(WIN_LINES)) : fmt(pickLine(LOSE_LINES));
+    AU.speak(line, { id: P.id, mood: win ? 'joy' : 'cross' });
     face = win ? 'love' : 'cross';
-    if (box) box.innerHTML = `<div class="result ${win ? 'win' : 'lose'}">${res.perfect ? 'PERFECT!' : win ? 'NAILED IT' : 'OH DEAR'}</div><div class="sub">${win ? fmt(pickLine(WIN_LINES)) : fmt(pickLine(LOSE_LINES))}</div>${res.item ? `<div class="sub">You earned ${D.ITEMS[res.item].icon} ${esc(D.ITEMS[res.item].name)}</div>` : ''}<div class="sub" style="font-size:14px;opacity:.8">Tap to carry on</div>`;
+    if (box) box.innerHTML = `<div class="result ${win ? 'win' : 'lose'}">${res.perfect ? 'PERFECT!' : win ? 'NAILED IT' : 'OH DEAR'}</div><div class="sub">${esc(line)}</div>${res.item ? `<div class="sub">You earned ${D.ITEMS[res.item].icon} ${esc(D.ITEMS[res.item].name)}</div>` : ''}<div class="sub" style="font-size:14px;opacity:.8">Tap to carry on</div>`;
     showDeltas(res.deltas);
     mode = 'reply'; pending = res;
     clearTimeout(replyTimer); replyTimer = setTimeout(afterReply, 2400);
@@ -231,39 +240,43 @@
       const mood = E.MOODS[Math.floor(Math.random() * E.MOODS.length)];
       const tells = mood.tells.slice().sort(() => Math.random() - 0.5).slice(0, 2);
       const answers = E.MOODS.map(m => m.answer).sort(() => Math.random() - 0.5);
+      AU.speak("I'm fine. Honestly. Don't worry about it.", { id: P.id, mood: mood.face });
       box.innerHTML = `<div class="title">"I'm fine."</div><div class="body"><div id="por"></div><div><div class="tells">You notice: <b>${esc(fmt(tells[0]))}</b>, and <b>${esc(fmt(tells[1]))}</b>.</div><div class="opts" style="margin-top:14px">${answers.map(a => `<button class="ghost" data-ans="${esc(a)}">${esc(a)}</button>`).join('')}</div></div></div>`;
-      box.querySelector('#por').appendChild(Object.assign(portrait(P.look, 220, 260, mood.face, { bg: P.tint }), { className: 'por' }));
+      box.querySelector('#por').appendChild(Object.assign(portrait(P.look, 220, 260, mood.face, { bg: P.tint, arm: mood.face === 'cross' ? 'cross' : mood.face === 'sad' ? 'facepalm' : 'shrug' }), { className: 'por' }));
       const bar = timerBar(box);
       mg = { id: 'fine', t: 0, len: 6, bar, tick() {}, timeout() { endGame('fine', 0); } };
       box.querySelectorAll('[data-ans]').forEach(b => b.onclick = () => endGame('fine', b.dataset.ans === mood.answer ? 1 : 0.1));
     },
     eat(box, P) {
       const round = E.eatRound();
+      AU.speak("I don't mind. You pick.", { id: P.id, mood: 'smug' });
       box.innerHTML = `<div class="title">Where do you want to eat?</div><div class="body"><div id="por"></div><div><div class="speech" id="eatSay">"I don't mind. You pick."</div><div class="opts three" style="margin-top:14px;width:600px">${round.options.map(o => `<button class="ghost" data-place="${esc(o)}">${esc(o)}</button>`).join('')}</div></div></div>`;
-      box.querySelector('#por').appendChild(Object.assign(portrait(P.look, 220, 260, 'smug', { bg: P.tint }), { className: 'por' }));
+      box.querySelector('#por').appendChild(Object.assign(portrait(P.look, 220, 260, 'smug', { bg: P.tint, arm: 'shrug' }), { className: 'por' }));
       const bar = timerBar(box), say = box.querySelector('#eatSay');
       let shown = 0;
-      mg = { id: 'eat', t: 0, len: 11, bar, tick() { const k = Math.min(round.hints.length, Math.floor((this.t - 0.6) / 1.4) + 1); if (k > shown) { shown = k; say.innerHTML = '"I don\'t mind. You pick."<br>' + round.hints.slice(0, k).map(h => `"${esc(h)}"`).join('<br>'); AU.sfx('pop'); } }, timeout() { endGame('eat', 0); } };
+      mg = { id: 'eat', t: 0, len: 11, bar, tick() { const k = Math.min(round.hints.length, Math.floor((this.t - 0.6) / 1.4) + 1); if (k > shown) { shown = k; say.innerHTML = '"I don\'t mind. You pick."<br>' + round.hints.slice(0, k).map(h => `"${esc(h)}"`).join('<br>'); AU.speak(round.hints[k - 1], { id: P.id, mood: 'meh' }); } }, timeout() { endGame('eat', 0); } };
       box.querySelectorAll('[data-place]').forEach(b => b.onclick = () => endGame('eat', b.dataset.place === round.answer ? (shown >= round.hints.length ? 1 : 0.8) : 0.1));
     },
     mmhmm(box, P) {
       const story = 'So Debbie goes to Karen, right, and Karen goes "well I never said that", and Debbie goes "you DID say that", and then Gary from accounts comes in with the cake, the LEMON one, and nobody even likes lemon, and then Karen starts crying in the stationery cupboard, and I\'m like, what is happening, and THEN the fire alarm goes off...'.split(' ');
       box.innerHTML = `<div class="title">Mm-hmm</div><div class="body"><div id="por"></div><div style="width:620px"><div class="story" id="story"></div><div class="look" id="look"></div><button class="pink big" id="mm">Mm-hmm</button></div></div>`;
-      const por = box.querySelector('#por'); const draw = f => { por.innerHTML = ''; por.appendChild(Object.assign(portrait(P.look, 220, 260, f, { bg: P.tint }), { className: 'por' })); };
+      const por = box.querySelector('#por'); const draw = f => { por.innerHTML = ''; por.appendChild(Object.assign(portrait(P.look, 220, 260, f, { bg: P.tint, arm: f === 'sus' ? 'cross' : 'wave' }), { className: 'por' })); };
       draw('talk');
+      AU.speak('So Debbie goes to Karen right and Karen goes well I never said that!', { id: P.id, mood: 'talk' });
       const bar = timerBar(box), st = box.querySelector('#story'), look = box.querySelector('#look');
       const times = [2.2, 4.6, 7.3, 9.6].map(x => x + Math.random() * 0.6);
       let hits = 0, wrong = 0, open = -1;
       mg = { id: 'mmhmm', t: 0, len: 12, bar, tick() {
         st.textContent = story.slice(Math.max(0, Math.floor(this.t * 4.6) - 14), Math.floor(this.t * 4.6)).join(' ');
         const o = times.findIndex(x => this.t >= x && this.t < x + 1.15);
-        if (o !== open) { open = o; if (o >= 0) { look.textContent = '...right?'; draw('sus'); AU.sfx('click'); } else { look.textContent = ''; draw('talk'); } }
+        if (o !== open) { open = o; if (o >= 0) { look.textContent = '...right?'; draw('sus'); AU.speak('Right?', { id: P.id, mood: 'sus' }); } else { look.textContent = ''; draw('talk'); } }
       }, timeout() { endGame('mmhmm', Math.max(0, (hits - wrong) / times.length)); } };
       const done = new Set();
-      box.querySelector('#mm').onclick = () => { if (open >= 0 && !done.has(open)) { done.add(open); hits++; AU.sfx('pop'); look.textContent = '✓'; } else { wrong++; AU.sfx('fail'); look.textContent = '"Why are you saying mm-hmm?"'; } };
+      box.querySelector('#mm').onclick = () => { if (open >= 0 && !done.has(open)) { done.add(open); hits++; AU.speak('Mm-hmm!', { id: 'you', mood: 'happy' }); look.textContent = '✓'; } else { wrong++; AU.sfx('fail'); look.textContent = '"Why are you saying mm-hmm?"'; } };
     },
     outfit(box, P) {
       const look = Object.assign({}, P.look, { col: ['#ff5fa2', '#39d0b8', '#f2a93b', '#b14bff', '#e5483b'][Math.floor(Math.random() * 5)], top: ['sequin', 'shirt', 'suit', 'cardigan'][Math.floor(Math.random() * 4)] });
+      AU.speak('How do I look? Be honest!', { id: P.id, mood: 'smug' });
       box.innerHTML = `<div class="title">How do I look?</div><div class="body"><div id="por"></div><div style="width:560px"><div class="tells">Tap <b>4 good words</b> before time runs out. One trap word and it's over.</div><div class="opts three" id="words" style="margin-top:14px;width:560px"></div><div class="look" id="got"></div></div></div>`;
       box.querySelector('#por').appendChild(Object.assign(portrait(look, 220, 260, 'smug', { bg: P.tint, arm: 'wave', full: true }), { className: 'por' }));
       const bar = timerBar(box), words = box.querySelector('#words'), got = box.querySelector('#got');
@@ -271,7 +284,7 @@
       const deal = () => { words.innerHTML = [0, 1, 2].map(() => { const ok = Math.random() < 0.45; const w = ok ? E.GOOD_WORDS[Math.floor(Math.random() * E.GOOD_WORDS.length)] : E.TRAP_WORDS[Math.floor(Math.random() * E.TRAP_WORDS.length)]; return `<button class="ghost word" data-ok="${ok ? 1 : 0}">${esc(w)}</button>`; }).join(''); };
       deal();
       mg = { id: 'outfit', t: 0, len: 9, bar, tick() { if (this.t > next) { next = this.t + 1.1; deal(); } }, timeout() { endGame('outfit', good / 4); } };
-      words.onclick = ev => { const b = ev.target.closest('[data-ok]'); if (!b || !mg) return; if (b.dataset.ok === '1') { good++; AU.sfx('heart'); got.textContent = '❤'.repeat(good); b.disabled = true; if (good >= 4) endGame('outfit', 1); } else { AU.sfx('fail'); got.textContent = `"${b.textContent}?!"`; setTimeout(() => endGame('outfit', 0.1), 500); mg.len = 99; } };
+      words.onclick = ev => { const b = ev.target.closest('[data-ok]'); if (!b || !mg) return; if (b.dataset.ok === '1') { good++; AU.sfx('heart'); got.textContent = '❤'.repeat(good); b.disabled = true; if (good >= 4) endGame('outfit', 1); } else { AU.sfx('fail'); got.textContent = `"${b.textContent}?!"`; AU.speak(`${b.textContent}?!`, { id: P.id, mood: 'angry' }); setTimeout(() => endGame('outfit', 0.1), 500); mg.len = 99; } };
     },
     duvet(box, P) {
       box.innerHTML = `<div class="title">Duvet war</div><div class="tells">Keep your share of the duvet in the green zone. Tap <b>Tug</b> (or Space) to pull it back.</div>
@@ -295,12 +308,14 @@
     c.clearRect(0, 0, W, H);
     const roomIx = S ? S.stage : 0;
     c.drawImage(A.room(W, H, roomIx), 0, 0);
+    if (A.roomFx) A.roomFx(c, W, H, roomIx, t);
+    beatPulse = Math.max(0, beatPulse - dt * 4.5);
     if (mode === 'title' || mode === 'pick' || mode === 'end') {
       c.fillStyle = 'rgba(30,6,24,.3)'; c.fillRect(0, 0, W, H);
       if (mode === 'title') {
         const L = D.PARTNERS[Math.floor(t / 4) % 6], Rr = D.PARTNERS[(Math.floor(t / 4) + 3) % 6];
-        A.person(c, L.look, 190, 800, 1.9, { face: (t % 4) < 2 ? 'sus' : 'smug', arm: 'cross', t, blink: (t % 3.3) < 0.12 });
-        A.person(c, Rr.look, 1090, 800, 1.9, { face: (t % 2.4) < 1.2 ? 'wow' : 'meh', arm: 'think', t, blink: (t % 2.9) < 0.12 });
+        A.person(c, L.look, 190, 800, 1.9, { face: (t % 4) < 2 ? 'sus' : 'smug', arm: 'cross', t, blink: (t % 3.3) < 0.12, groove: beatPulse * 0.4 });
+        A.person(c, Rr.look, 1090, 800, 1.9, { face: (t % 2.4) < 1.2 ? 'wow' : 'meh', arm: (t % 2.4) < 1.2 ? 'shrug' : 'think', t, blink: (t % 2.9) < 0.12, groove: beatPulse * 0.4 });
         bubble(c, 250, 340, '"I\'m fine."', 1 + Math.sin(t * 3) * 0.03);
         c.font = '900 54px Fredoka'; c.fillStyle = '#fff'; c.strokeStyle = '#2a1a24'; c.lineWidth = 6; c.textAlign = 'center';
         const q = (t % 2.4) < 1.2 ? '?!' : '...'; c.strokeText(q, 1170, 300 + Math.sin(t * 4) * 6); c.fillText(q, 1170, 300 + Math.sin(t * 4) * 6);
@@ -324,8 +339,10 @@
       const shown = card || lastCard;
       if (shown) {
         const spk = speakerOf(shown.who);
+        const curFace = AU.isSpeaking && AU.isSpeaking() ? 'talk' : (mode === 'card' ? (drag && Math.abs(drag.dx) > 60 ? (drag.dx < 0 ? 'sus' : 'wow') : face) : face);
+        const badgeText = mode === 'card' && lean && shown[lean] ? fmt(shown[lean][0]).slice(0, 18) + (fmt(shown[lean][0]).length > 18 ? '…' : '') : null;
         c.save(); c.translate(CX + CW / 2 + cardV.x, CY + CH / 2); c.scale(cardV.scale, cardV.scale); c.translate(-(CX + CW / 2), -(CY + CH / 2));
-        A.card(c, CX, CY, CW, CH, { look: spk.look, cat: spk.cat, tint: spk.tint, name: spk.name, face: mode === 'card' ? (drag && Math.abs(drag.dx) > 60 ? (drag.dx < 0 ? 'sus' : 'wow') : face) : face, arm: 'idle', t, rot: cardV.rot, blink: (t % 3.7) < 0.12 });
+        A.card(c, CX, CY, CW, CH, { look: spk.look, cat: spk.cat, tint: spk.tint, name: spk.name, face: curFace, lean, badge: badgeText, groove: beatPulse * 0.35, t, rot: cardV.rot, blink: (t % 3.7) < 0.12 });
         c.restore();
       }
       if (card) lastCard = card;
@@ -371,20 +388,27 @@
     else { lean = null; showDots(null); play.querySelectorAll('.choice').forEach(b => b.classList.remove('lean')); }
   });
 
+  function useItemSlot(idx) {
+    if (mode !== 'card' || !S) return;
+    const r = E.useItem(S, idx); if (!r) return;
+    E.save(S);
+    if (r.skip) { toast('📱 "Sorry, got to take this..." You escaped.', 'gold'); AU.sfx('pop'); updateHud(); return nextCard(); }
+    AU.sfx('heart'); showDeltas(r.deltas); toast(`${D.ITEMS[r.item].icon} ${esc(D.ITEMS[r.item].name)}!`, 'gold');
+  }
+
   document.addEventListener('click', ev => {
     AU.init();
     const el = ev.target.closest('[data-a],[data-side],[data-partner],[data-role],[data-item]');
     if (!el) { if (mode === 'reply' && ev.target.closest('#play')) afterReply(); return; }
     if (el.dataset.side) return choose(el.dataset.side);
-    if (el.dataset.partner) { pick.partner = el.dataset.partner; AU.sfx('heart'); return showPick(); }
-    if (el.dataset.role) { pick.role = el.dataset.role; AU.sfx('click'); return showPick(); }
-    if (el.dataset.item) {
-      if (mode !== 'card') return;
-      const r = E.useItem(S, +el.dataset.item); if (!r) return;
-      E.save(S);
-      if (r.skip) { toast('📱 "Sorry, got to take this..." You escaped.', 'gold'); AU.sfx('pop'); updateHud(); return nextCard(); }
-      AU.sfx('heart'); showDeltas(r.deltas); toast(`${D.ITEMS[r.item].icon} ${esc(D.ITEMS[r.item].name)}!`, 'gold'); return;
+    if (el.dataset.partner) {
+      pick.partner = el.dataset.partner;
+      const P = D.PARTNERS.find(p => p.id === pick.partner);
+      AU.speak(`Hi, I'm ${P.name}!`, { id: P.id, mood: 'happy' });
+      return showPick();
     }
+    if (el.dataset.role) { pick.role = el.dataset.role; AU.sfx('click'); return showPick(); }
+    if (el.dataset.item) return useItemSlot(+el.dataset.item);
     switch (el.dataset.a) {
       case 'pick': showPick(); break;
       case 'start': startRun(); break;
@@ -399,8 +423,12 @@
     }
   });
   document.addEventListener('keydown', ev => {
-    if (mode === 'card' && (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight')) choose(ev.key === 'ArrowLeft' ? 'L' : 'R');
-    else if (mode === 'reply' && (ev.key === ' ' || ev.key === 'Enter')) { ev.preventDefault(); afterReply(); }
+    if (ev.key === 'm' || ev.key === 'M') { AU.setMuted(!AU.muted); const m = hud.querySelector('[data-a="mute"]'); if (m) m.textContent = AU.muted ? '🔇' : '🔊'; return; }
+    if (mode === 'card') {
+      if (ev.key === 'ArrowLeft' || ev.key === 'a' || ev.key === 'A') return choose('L');
+      if (ev.key === 'ArrowRight' || ev.key === 'd' || ev.key === 'D') return choose('R');
+      if (ev.key >= '1' && ev.key <= '3') return useItemSlot(+ev.key - 1);
+    } else if (mode === 'reply' && (ev.key === ' ' || ev.key === 'Enter')) { ev.preventDefault(); afterReply(); }
     else if (mode === 'game' && mg && ev.key === ' ') { ev.preventDefault(); if (mg.key) mg.key(); else { const b = $('#mm'); if (b) b.click(); } }
     else if (mode === 'stage' && (ev.key === ' ' || ev.key === 'Enter')) { screen.innerHTML = ''; nextCard(); }
   });
