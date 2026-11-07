@@ -5,7 +5,9 @@
 @font-face { font-family: "Luckiest Guy"; src: url(assets/fonts/luckiest-guy-latin-400-normal.woff2) format("woff2"); font-display: swap; }
 :root {
   --ink: #2a1a24; --cream: #fff4dc; --pink: #ff5fa2; --hot: #ff3f7f; --plum: #3a1030; --mustard: #f2a93b; --teal: #39d0b8; --green: #2fb35a; --red: #e5483b;
-  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif; --logo: "Luckiest Guy", "Fredoka", Impact, sans-serif;
+  /* After the game's own fonts: fonts with Devanagari (Hindi) and Chinese glyphs on Linux/Android, Windows and macOS. */
+  --intl: "Noto Sans Devanagari", "Nirmala UI", "Kohinoor Devanagari", "Noto Sans SC", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB";
+  --display: "Fredoka", "Trebuchet MS", var(--intl), system-ui, sans-serif; --logo: "Luckiest Guy", "Fredoka", Impact, var(--intl), sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: #1a0a16; color: var(--ink); font-family: var(--display); overflow: hidden; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -24,14 +26,14 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 
 /* ---------- HUD: the four meters ---------- */
 .meters { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 16px; pointer-events: none; }
-.meter { position: relative; width: 66px; text-align: center; }
+.meter { position: relative; width: 78px; text-align: center; }
 .meter .jar { position: relative; width: 58px; height: 58px; margin: 0 auto; border-radius: 16px; border: 3px solid var(--ink); background: rgba(255,244,220,.9); overflow: hidden; box-shadow: 0 3px 0 var(--ink); }
 .meter .fill { position: absolute; left: 0; right: 0; bottom: 0; transition: height .6s cubic-bezier(.3,1.4,.6,1); opacity: .85; }
 .meter .ic { position: absolute; inset: 0; display: grid; place-items: center; font-size: 28px; filter: drop-shadow(0 1px 0 rgba(0,0,0,.25)); transition: transform .15s; }
 .meter .pct { position: absolute; inset: auto 0 2px 0; font-size: 10px; font-weight: 800; color: var(--ink); opacity: 0; transition: opacity .15s; text-shadow: 0 1px 0 rgba(255,255,255,.8); }
 .meter:hover .pct, .meter.danger .pct { opacity: 1; }
 .meter:hover .ic, .meter.danger .ic { transform: translateY(-4px) scale(.92); }
-.meter .lbl { font-size: 11px; color: var(--cream); margin-top: 4px; text-shadow: 0 1px 0 var(--ink); white-space: nowrap; }
+.meter .lbl { position: relative; left: 50%; transform: translateX(-50%); width: max-content; max-width: 92px; font-size: 11px; line-height: 1.15; color: var(--cream); margin-top: 4px; padding: 1px 5px; border-radius: 6px; background: rgba(42,26,36,.55); text-shadow: 0 1px 0 var(--ink); overflow-wrap: break-word; }
 .meter .dot { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); border-radius: 50%; background: #fff; border: 2px solid var(--ink); opacity: 0; transition: opacity .15s; }
 .meter .dot.s1 { width: 10px; height: 10px; opacity: 1; } .meter .dot.s2 { width: 16px; height: 16px; top: -15px; opacity: 1; }
 .meter.danger .jar { animation: danger .5s infinite alternate; }
@@ -54,11 +56,23 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .items .it.empty { opacity: .35; cursor: default; }
 .streak { position: absolute; right: 12px; top: 72px; background: var(--pink); color: #fff; border: 3px solid var(--ink); border-radius: 12px; padding: 2px 10px; font-weight: 700; box-shadow: 0 3px 0 var(--ink); }
 .mute { position: absolute; right: 12px; bottom: 12px; }
+.langbtn { position: absolute; right: 62px; bottom: 12px; }
+
+/* ---------- language picker ---------- */
+.langs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.langs button { min-width: 44px; min-height: 34px; font-size: 15px; }
+.langs button.on { background: var(--pink); color: #fff; }
+.langrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 1000px; }
+.langrow .ll { color: var(--cream); font-size: 15px; text-shadow: 0 2px 0 var(--ink); }
+.langpop { position: absolute; right: 12px; bottom: 58px; z-index: 5; background: var(--cream); border: 3px solid var(--ink); border-radius: 16px; box-shadow: 0 4px 0 var(--ink); padding: 10px; width: 200px; animation: fade .15s; }
+.langpop .lp-h { font-weight: 700; margin: 0 0 8px 2px; }
+.langs.stack { flex-direction: column; align-items: stretch; }
+.langs.stack button { text-align: left; }
 
 /* ---------- the card table ---------- */
 .question { position: absolute; left: 50%; top: 96px; transform: translateX(-50%); width: 820px; text-align: center; font-size: 30px; font-weight: 700; color: #fff; text-shadow: 0 3px 0 var(--ink), 0 0 18px rgba(0,0,0,.4); line-height: 1.15; pointer-events: none; }
 .speaker { position: absolute; left: 50%; top: 158px; transform: translateX(-50%); font-size: 15px; color: var(--cream); opacity: .85; pointer-events: none; }
-.choice { position: absolute; top: 330px; width: 330px; padding: 16px 18px; font-size: 21px; line-height: 1.2; border-radius: 20px; background: var(--cream); text-align: center; }
+.choice { position: absolute; top: 330px; width: 330px; padding: 16px 18px; font-size: 21px; line-height: 1.2; border-radius: 20px; background: var(--cream); text-align: center; overflow-wrap: break-word; hyphens: auto; }
 .choice.l { left: 92px; } .choice.r { right: 92px; }
 .choice .arr { display: block; font-size: 13px; opacity: .6; margin-bottom: 4px; font-weight: 500; }
 .choice.lean { background: #fff; transform: scale(1.06); }
@@ -110,7 +124,7 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 
 /* ---------- microgames ---------- */
 .mg { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: radial-gradient(800px 500px at 50% 45%, rgba(255,95,162,.35), rgba(26,6,20,.88)); animation: fade .25s; }
-.mg .title { font-family: var(--logo); font-size: 58px; color: #fff; -webkit-text-stroke: 3px var(--ink); text-shadow: 0 6px 0 var(--ink); letter-spacing: 1px; }
+.mg .title { font-family: var(--logo); font-size: 58px; text-align: center; max-width: 1100px; line-height: 1.05; color: #fff; -webkit-text-stroke: 3px var(--ink); text-shadow: 0 6px 0 var(--ink); letter-spacing: 1px; }
 .mg .sub { color: var(--cream); font-size: 19px; text-shadow: 0 2px 0 var(--ink); }
 .mg .timer { width: 520px; height: 16px; border: 3px solid var(--ink); border-radius: 10px; background: #fff; overflow: hidden; }
 .mg .timer i { display: block; height: 100%; background: linear-gradient(90deg, var(--hot), var(--mustard)); }
@@ -124,7 +138,7 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .mg .story { font-size: 22px; color: #fff; text-shadow: 0 2px 0 var(--ink); max-width: 760px; min-height: 64px; text-align: center; }
 .mg .look { font-family: var(--logo); font-size: 40px; color: var(--mustard); -webkit-text-stroke: 2px var(--ink); height: 50px; }
 .mg .big { font-size: 34px; padding: 16px 40px; border-radius: 22px; }
-.mg .word { min-width: 160px; height: 70px; font-size: 24px; }
+.mg .word { min-width: 160px; min-height: 70px; font-size: 22px; line-height: 1.1; }
 .mg .bar { position: relative; width: 600px; height: 50px; border: 4px solid var(--ink); border-radius: 16px; background: #c9e4ff; overflow: hidden; }
 .mg .bar .zone { position: absolute; top: 0; bottom: 0; background: rgba(47,179,90,.35); border-left: 3px dashed var(--green); border-right: 3px dashed var(--green); }
 .mg .bar .need { position: absolute; top: -6px; bottom: -6px; width: 8px; margin-left: -4px; background: var(--ink); border-radius: 4px; }
@@ -147,3 +161,4 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .tl-stop { position: absolute; top: -4px; transform: translateX(-50%); }
 .tl-stop i { display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--cream); border: 3px solid var(--ink); margin: 0 auto; }
 .tl-stop span { display: block; font-size: 11px; color: var(--cream); text-shadow: 0 1px 0 var(--ink); white-space: nowrap; margin-top: 4px; }
+.tl-stop.up span { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); margin: 0; } /* alternate labels sit above the line so long names never collide */

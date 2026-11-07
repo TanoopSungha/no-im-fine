@@ -321,8 +321,20 @@
     { name: 'golden', wall: ['#c9a27a', '#e2c7a2'], floor: '#7a5a3a', props: ['window', 'armchair', 'plant', 'frames'] },
   ];
   const roomCache = {};
+  // Text drawn on the canvas: the game's font first, then fonts that have Devanagari and Chinese glyphs.
+  const I = () => G.I18N;
+  const FONT = () => 'Fredoka, ' + (I() ? I().FONT_FALLBACK : 'sans-serif');
+  const tr = (key, fb) => (I() ? I().t(key) || fb : fb);
+  // Shrink a font until the text fits; if even the smallest size is too wide, cut it with an ellipsis.
+  function fitText(c, text, maxW, weight, size, min) {
+    let s = size; c.font = `${weight} ${s}px ${FONT()}`;
+    while (s > min && c.measureText(text).width > maxW) { s--; c.font = `${weight} ${s}px ${FONT()}`; }
+    if (c.measureText(text).width <= maxW) return text;
+    const ch = Array.from(text); while (ch.length > 1 && c.measureText(ch.join('') + '…').width > maxW) ch.pop();
+    return ch.join('').trimEnd() + '…';
+  }
   function room(W, H, i) {
-    const key = i; if (roomCache[key]) return roomCache[key];
+    const key = i + '|' + (I() ? I().getLang() : 'en'); if (roomCache[key]) return roomCache[key];
     const R = ROOMS[i] || ROOMS[0];
     const cv = G.document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
     const g = c.createLinearGradient(0, 0, 0, H * 0.72); g.addColorStop(0, R.wall[0]); g.addColorStop(1, R.wall[1]); c.fillStyle = g; c.fillRect(0, 0, W, H);
@@ -360,15 +372,15 @@
         break; }
       case 'lights': { c.strokeStyle = '#1e1020'; c.lineWidth = 2; c.beginPath(); for (let k = 0; k <= 30; k++) { const x = k / 30 * W, y = 30 + Math.sin(k / 30 * Math.PI * 3) * 18 + 20; k ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); for (let k = 1; k < 30; k++) { const x = k / 30 * W, y = 54 + Math.sin(k / 30 * Math.PI * 3) * 18; c.fillStyle = ['#ffd34d', '#ff8ac0', '#9ff0e0'][k % 3]; c.shadowColor = c.fillStyle; c.shadowBlur = 14; c.beginPath(); c.arc(x, y, 5, 0, TAU); c.fill(); } c.shadowBlur = 0; break; }
       case 'candle': { const x = W - 260, y = fy - 10; c.fillStyle = '#7a1f2e'; rr(c, x - 120, y - 70, 240, 16, 6); c.fill(); c.stroke(); c.fillStyle = '#5a3a2a'; c.fillRect(x - 6, y - 54, 12, 64); c.fillStyle = '#fff4d6'; rr(c, x - 8, y - 112, 16, 42, 4); c.fill(); c.stroke(); c.fillStyle = '#ffcf3f'; c.shadowColor = '#ffb000'; c.shadowBlur = 24; c.beginPath(); c.ellipse(x, y - 122, 6, 11, 0, 0, TAU); c.fill(); c.shadowBlur = 0; c.fillStyle = '#c3001b'; c.beginPath(); c.arc(x + 60, y - 80, 9, 0, TAU); c.fill(); c.fillStyle = '#e8e2f0'; rr(c, x - 90, y - 98, 30, 30, 4); c.fill(); break; }
-      case 'frames': for (let i = 0; i < 3; i++) { const x = W - 380 + i * 110, y = 110 + (i % 2) * 30; c.fillStyle = '#c98b3c'; c.fillRect(x - 6, y - 6, 82, 92); c.fillStyle = ['#ffd6e0', '#cfe8ff', '#d8f5c8'][i]; c.fillRect(x, y, 70, 80); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.arc(x + 26, y + 34, 10, 0, TAU); c.arc(x + 46, y + 34, 10, 0, TAU); c.fill(); c.fillRect(x + 14, y + 48, 44, 26); c.fillStyle = '#ff3f7f'; c.font = '16px sans-serif'; c.fillText('♥', x + 30, y + 22); } break;
+      case 'frames': for (let i = 0; i < 3; i++) { const x = W - 380 + i * 110, y = 110 + (i % 2) * 30; c.fillStyle = '#c98b3c'; c.fillRect(x - 6, y - 6, 82, 92); c.fillStyle = ['#ffd6e0', '#cfe8ff', '#d8f5c8'][i]; c.fillRect(x, y, 70, 80); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.arc(x + 26, y + 34, 10, 0, TAU); c.arc(x + 46, y + 34, 10, 0, TAU); c.fill(); c.fillRect(x + 14, y + 48, 44, 26); c.fillStyle = '#ff3f7f'; c.font = '16px ' + FONT(); c.fillText('♥', x + 30, y + 22); } break;
       case 'sofa': { const x = W - 470, y = fy + 20; c.fillStyle = '#c85a54'; rr(c, x, y - 120, 360, 90, 26); c.fill(); c.stroke(); rr(c, x - 20, y - 70, 400, 70, 22); c.fill(); c.stroke(); c.fillStyle = '#ffd34d'; rr(c, x + 40, y - 110, 60, 50, 12); c.fill(); c.stroke(); c.fillStyle = '#7fc8ff'; rr(c, x + 260, y - 110, 60, 50, 12); c.fill(); c.stroke(); break; }
       case 'armchair': { const x = W - 360, y = fy + 20; c.fillStyle = '#6b8f45'; rr(c, x, y - 150, 200, 120, 30); c.fill(); c.stroke(); rr(c, x - 20, y - 70, 240, 70, 22); c.fill(); c.stroke(); c.fillStyle = '#f4efe1'; rr(c, x + 70, y - 140, 60, 40, 6); c.fill(); break; }
       case 'lamp': { const x = 470, y = fy + 6; c.fillStyle = '#2a1a24'; c.fillRect(x - 3, y - 230, 6, 230); c.fillRect(x - 30, y - 6, 60, 8); c.fillStyle = '#f2a93b'; c.beginPath(); c.moveTo(x - 30, y - 230); c.lineTo(x + 30, y - 230); c.lineTo(x + 46, y - 180); c.lineTo(x - 46, y - 180); c.closePath(); c.fill(); c.stroke(); const lg = c.createRadialGradient(x, y - 180, 6, x, y - 140, 160); lg.addColorStop(0, 'rgba(255,220,140,.4)'); lg.addColorStop(1, 'rgba(255,220,140,0)'); c.fillStyle = lg; c.fillRect(x - 170, y - 200, 340, 260); break; }
       case 'plant': { const x = 440, y = fy + 10; [[-0.8, 90], [-0.3, 120], [0.2, 130], [0.7, 96]].forEach(([a, l], i) => { c.save(); c.translate(x, y - 50); c.rotate(a); c.fillStyle = i % 2 ? '#2f8a4f' : '#3fa45f'; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(-24, -l * 0.55, 0, -l); c.quadraticCurveTo(24, -l * 0.55, 0, 0); c.fill(); c.stroke(); c.restore(); }); c.fillStyle = '#c86a3d'; c.beginPath(); c.moveTo(x - 30, y - 56); c.lineTo(x + 30, y - 56); c.lineTo(x + 22, y); c.lineTo(x - 22, y); c.closePath(); c.fill(); c.stroke(); break; }
-      case 'boxes': for (let i = 0; i < 5; i++) { const x = W - 420 + (i % 3) * 110 + (i > 2 ? 50 : 0), y = fy + 30 - (i > 2 ? 100 : 0); c.fillStyle = '#c9965a'; rr(c, x, y - 100, 104, 100, 4); c.fill(); c.stroke(); c.fillStyle = '#e8d6a8'; c.fillRect(x + 40, y - 100, 24, 100); c.fillStyle = '#2a1a24'; c.font = '700 13px Fredoka, sans-serif'; c.fillText(['KITCHEN', 'MISC??', 'CABLES', 'FRAGILE', 'YOUR STUFF'][i], x + 8, y - 30); } break;
+      case 'boxes': for (let i = 0; i < 5; i++) { const x = W - 420 + (i % 3) * 110 + (i > 2 ? 50 : 0), y = fy + 30 - (i > 2 ? 100 : 0); c.fillStyle = '#c9965a'; rr(c, x, y - 100, 104, 100, 4); c.fill(); c.stroke(); c.fillStyle = '#e8d6a8'; c.fillRect(x + 40, y - 100, 24, 100); c.fillStyle = '#2a1a24'; c.fillText(fitText(c, tr('art.box.' + i, ''), 90, 700, 13, 9), x + 8, y - 30); } break;
       case 'bunting': { c.strokeStyle = '#1e1020'; c.lineWidth = 2; c.beginPath(); c.moveTo(0, 40); c.quadraticCurveTo(W / 2, 110, W, 40); c.stroke(); for (let k = 1; k < 20; k++) { const u = k / 20, x = u * W, y = 40 + 4 * u * (1 - u) * 70; c.fillStyle = ['#ff8ac0', '#fff', '#ffd34d'][k % 3]; c.beginPath(); c.moveTo(x - 16, y); c.lineTo(x + 16, y); c.lineTo(x, y + 30); c.closePath(); c.fill(); c.stroke(); } break; }
       case 'kitchen': { const x = W - 520; c.fillStyle = '#f4efe1'; c.fillRect(x, fy - 140, 460, 140); c.strokeRect(x, fy - 140, 460, 140); c.fillStyle = '#5b6470'; c.fillRect(x - 10, fy - 150, 480, 14); for (let i = 0; i < 4; i++) { c.strokeRect(x + 10 + i * 112, fy - 126, 100, 116); c.fillStyle = '#c0c4cc'; c.fillRect(x + 50 + i * 112, fy - 70, 22, 5); } c.fillStyle = '#e8e2f0'; for (let i = 0; i < 3; i++) { rr(c, x + 40 + i * 150, fy - 340, 110, 90, 4); c.fill(); c.stroke(); } c.fillStyle = '#c3001b'; rr(c, x + 300, fy - 190, 50, 40, 8); c.fill(); c.stroke(); break; }
-      case 'toys': { const y = fy + 50; [['#e5483b', 620], ['#2f9bff', 700], ['#ffcf3f', 760]].forEach(([col, x], i) => { c.fillStyle = col; rr(c, x, y - 40 - i * 4, 44, 44, 4); c.fill(); c.stroke(); c.fillStyle = '#fff'; c.font = '900 22px Fredoka'; c.fillText('ABC'[i], x + 14, y - 10 - i * 4); }); c.fillStyle = '#ff8ac0'; c.beginPath(); c.arc(860, y - 20, 24, 0, TAU); c.fill(); c.stroke(); break; }
+      case 'toys': { const y = fy + 50; [['#e5483b', 620], ['#2f9bff', 700], ['#ffcf3f', 760]].forEach(([col, x], i) => { c.fillStyle = col; rr(c, x, y - 40 - i * 4, 44, 44, 4); c.fill(); c.stroke(); c.fillStyle = '#fff'; c.font = '900 22px ' + FONT(); c.fillText('ABC'[i], x + 14, y - 10 - i * 4); }); c.fillStyle = '#ff8ac0'; c.beginPath(); c.arc(860, y - 20, 24, 0, TAU); c.fill(); c.stroke(); break; }
     }
   }
 
@@ -425,7 +437,7 @@
     // subtle floating mood glyphs on card
     if (o.face === 'love' || o.face === 'angry' || o.face === 'sus') {
       const sym = o.face === 'love' ? '♥' : o.face === 'angry' ? '💢' : '❓';
-      c.save(); c.font = '700 20px Fredoka, sans-serif'; c.fillStyle = o.face === 'love' ? '#ff3f7f' : '#fff';
+      c.save(); c.font = '700 20px ' + FONT(); c.fillStyle = o.face === 'love' ? '#ff3f7f' : '#fff';
       for (let k = 0; k < 3; k++) {
         const ph = (o.t || 0) * 1.8 + k * 2.1;
         const gx = w * 0.2 + (k * 0.3) * w + Math.sin(ph) * 10;
@@ -440,15 +452,16 @@
       const isL = o.lean === 'L';
       c.translate(isL ? 24 : w - 24, 34); c.rotate(isL ? -0.12 : 0.12);
       c.fillStyle = isL ? '#ff3f7f' : '#39d0b8'; c.strokeStyle = OUT; c.lineWidth = 3.5;
-      const bw = Math.min(w - 48, Math.max(90, o.badge.length * 10 + 26));
+      const label = fitText(c, o.badge, 200, 700, 16, 13);
+      const bw = Math.min(w - 48, Math.max(90, c.measureText(label).width + 26));
       rr(c, isL ? 0 : -bw, -18, bw, 34, 12); c.fill(); c.stroke();
-      c.fillStyle = '#fff'; c.font = '700 16px Fredoka, sans-serif'; c.textAlign = 'center';
-      c.fillText(o.badge, isL ? bw / 2 : -bw / 2, 5);
+      c.fillStyle = '#fff'; c.textAlign = 'center';
+      c.fillText(label, isL ? bw / 2 : -bw / 2, 5);
       c.restore();
     }
     c.restore();
     c.lineWidth = 5; rr(c, 0, 0, w, h, 26); c.stroke();
-    if (o.name) { c.fillStyle = '#fff4dc'; rr(c, w / 2 - 110, h - 44, 220, 34, 14); c.fill(); c.lineWidth = 3; c.stroke(); c.fillStyle = OUT; c.font = '700 19px Fredoka, sans-serif'; c.textAlign = 'center'; c.fillText(o.name, w / 2, h - 20); }
+    if (o.name) { c.fillStyle = '#fff4dc'; rr(c, w / 2 - 110, h - 44, 220, 34, 14); c.fill(); c.lineWidth = 3; c.stroke(); c.fillStyle = OUT; const nm = fitText(c, o.name, 204, 700, 19, 12); c.textAlign = 'center'; c.fillText(nm, w / 2, h - 20); }
     c.restore();
   }
 
@@ -457,7 +470,7 @@
     c.strokeStyle = 'rgba(255,95,162,.28)'; c.lineWidth = 2; rr(c, x + 12, y + 12, w - 24, h - 24, 18); c.stroke();
     const sc = 1 + Math.sin((t || 0) * 3) * 0.04;
     c.translate(x + w / 2, y + h / 2); c.scale(sc, sc);
-    c.fillStyle = '#ff5fa2'; c.font = '120px sans-serif'; c.textAlign = 'center'; c.fillText('♥', 0, 40);
+    c.fillStyle = '#ff5fa2'; c.font = '120px ' + FONT(); c.textAlign = 'center'; c.fillText('♥', 0, 40);
     c.restore();
   }
 

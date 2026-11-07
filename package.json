@@ -6,7 +6,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node test/sim.js",
+    "test": "node test/sim.js && node test/i18n.js",
     "dist": "electron-builder --publish never",
     "dist:mac": "electron-builder --mac --publish never",
     "dist:win": "electron-builder --win --publish never",

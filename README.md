@@ -15,6 +15,12 @@ Your other half says "I'm fine." You have about five seconds to work out what th
 
 Pick from six partners and choose whether they're your girlfriend, boyfriend or partner; the game uses the right words throughout.
 
+## Languages
+
+Play in **English**, **Français**, **Deutsch**, **Español**, **हिन्दी** (Hindi) or **简体中文** (Simplified Chinese). Pick a language on the title screen, or mid-game with the 🌐 button next to the sound button; everything switches straight away and the choice is remembered. On first launch the game follows your device's language if it is one of these six, otherwise English. The jokes are rewritten for each language rather than translated word for word.
+
+The text lives in `src/i18n/<language>.js` (English is `en.js`, the master copy) and `npm test` checks every language has every line.
+
 ## Run it
 
 ```

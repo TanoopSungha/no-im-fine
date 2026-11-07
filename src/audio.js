@@ -258,7 +258,9 @@
     if (!init() || muted || !text) return 0;
     if (opts && opts.id === 'biscuit') { SFX.meow(); return 0.4; }
     if (voiceTimer) { clearTimeout(voiceTimer); voiceTimer = null; }
-    const clean = String(text).replace(/<[^>]*>/g, '').replace(/[^\w\s?!.,']/g, '');
+    // Keep letters from any script (Hindi, Chinese...), so every language gets a voice. Chinese has no spaces: one syllable per character.
+    let clean = String(text).replace(/<[^>]*>/g, '').replace(/[^\p{L}\p{M}\p{N}\s?!.,'？！。，、]/gu, '');
+    clean = clean.replace(/[？]/g, '?').replace(/[！]/g, '!').replace(/[。，、]/g, ', ').replace(/(\p{Script=Han})/gu, '$1 ');
     const prof = getVoiceProfile(opts);
     const mood = (opts && opts.mood) || 'neutral';
     const isQuestion = clean.includes('?');
@@ -269,7 +271,7 @@
     const step = prof.speed;
     let count = 0;
     for (let w = 0; w < words.length && count < 22; w++) {
-      const word = words[w].toLowerCase();
+      const word = words[w].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const chunks = word.match(/[aeiouy]+|[^aeiouy]+/g) || [word];
       const syls = Math.max(1, Math.min(3, Math.ceil(chunks.length / 2)));
       for (let s = 0; s < syls && count < 22; s++) {

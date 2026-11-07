@@ -1,18 +1,27 @@
 // Headless test: checks every card is well-formed, then plays many runs with a careful bot and a random one.
-require('../src/data.js'); require('../src/cards.js'); require('../src/engine.js');
+for (const l of ['en', 'fr', 'de', 'es', 'hi', 'zh-Hans']) require('../src/i18n/' + l + '.js');
+require('../src/i18n.js'); require('../src/data.js'); require('../src/cards.js'); require('../src/engine.js');
 const assert = require('assert');
-const D = globalThis.NIF_DATA, K = globalThis.NIF_CARDS, E = globalThis.NIF;
+const D = globalThis.NIF_DATA, K = globalThis.NIF_CARDS, E = globalThis.NIF, I = globalThis.I18N;
 
 const ids = new Set();
 for (const c of K.CARDS) {
   assert(!ids.has(c.id), 'duplicate card ' + c.id); ids.add(c.id);
   assert(D.CAST[c.who] || c.who === 'p', 'unknown speaker ' + c.who);
   for (const side of ['L', 'R']) {
-    const ch = c[side]; assert(ch && ch[0] && ch[1] && ch[2], c.id + ' ' + side);
+    const ch = c[side]; assert(ch && I.t(ch[0]) && ch[1] && I.t(ch[2]), c.id + ' ' + side);
     for (const k in ch[1]) assert('lpsm'.includes(k), c.id + ' fx key ' + k);
     if (ch[4] && ch[4].risk) assert(D.ENDINGS[ch[4].risk[2]], 'ending ' + ch[4].risk[2]);
   }
-  for (const role of Object.keys(D.ROLES)) { const S = E.newRun('jess', role); for (const t of [c.text, c.L[2], c.R[2]]) assert(!/\{\w+\}/.test(E.fmt(S, t)), 'unfilled token in ' + c.id); }
+  // every language, every role, every stage: no token left unfilled
+  for (const L of I.LANGS) {
+    I.setLang(L.code);
+    for (const role of Object.keys(D.ROLES)) for (let st = c.st[0]; st <= c.st[1]; st++) {
+      const S = E.newRun('jess', role); S.stage = st;
+      for (const k of [c.text, c.L[0], c.L[2], c.R[0], c.R[2]]) { const out = E.tx(S, k); assert(out && !/[{}]/.test(out), 'unfilled token in ' + L.code + ' ' + k + ': ' + out); }
+    }
+  }
+  I.setLang('en');
 }
 for (let s = 0; s <= 6; s++) assert(K.CARDS.filter(c => c.st[0] <= s && s <= c.st[1]).length >= 12, 'enough cards for stage ' + s);
 

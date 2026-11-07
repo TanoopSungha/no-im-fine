@@ -1,7 +1,7 @@
 // No, I'm Fine.: game rules. No DOM in here, so it can be tested in Node.
 (function (G) {
   'use strict';
-  const D = G.NIF_DATA, K = G.NIF_CARDS;
+  const D = G.NIF_DATA, K = G.NIF_CARDS, I = G.I18N;
   const SAVE = 'no-im-fine-run-v1', META = 'no-im-fine-meta-v1';
   const MK = { l: 'love', p: 'patience', s: 'sanity', m: 'money' };
   let R = Math.random;
@@ -29,13 +29,20 @@
 
   const stageFor = day => { let s = 0; for (const st of D.STAGES) if (day >= st.from) s = st.id; return s; };
 
-  // Fill in names and pronouns.
+  // Fill in names and pronouns, in the current language (role.<role>.* keys). {g:fem|masc|neutral} picks by role.
   function fmt(S, text) {
-    const r = D.ROLES[S.partner.role];
-    const cap = w => w.charAt(0).toUpperCase() + w.slice(1);
-    return String(text).replace(/\{P\}/g, S.partner.name).replace(/\{They\}/g, cap(r.they)).replace(/\{they\}/g, r.they)
-      .replace(/\{them\}/g, r.them).replace(/\{their\}/g, r.their).replace(/\{theyre\}/g, r.theyre).replace(/\{role\}/g, r.stages[S.stage]);
+    const role = S.partner.role, g = D.ROLES[role].g, w = k => I.t('role.' + role + '.' + k);
+    const cap = x => x.charAt(0).toLocaleUpperCase(I.locale()) + x.slice(1);
+    // Order matters: pronouns first (a language may define one as "{P}"), then the name, then {g:...} (which may contain {P}).
+    return String(text)
+      .replace(/\{They\}/g, () => cap(w('they'))).replace(/\{they\}/g, () => w('they'))
+      .replace(/\{them\}/g, () => w('them')).replace(/\{their\}/g, () => w('their')).replace(/\{theyre\}/g, () => w('theyre'))
+      .replace(/\{role\}/g, () => w('stage' + S.stage)).replace(/\{your\}/g, () => w('your' + S.stage))
+      .replace(/\{P\}/g, S.partner.name)
+      .replace(/\{g:([^{}]*)\}/g, (m, alts) => { const a = alts.split('|'); return a[g] != null ? a[g] : a[a.length - 1]; });
   }
+  // Look a dictionary key up and fill it in.
+  const tx = (S, key, vars) => fmt(S, I.t(key, vars));
 
   // Draw the next card (or a microgame).
   function next(S) {
@@ -95,7 +102,7 @@
     if (!card || S.ended) return null;
     const ch = card[side];
     const deltas = applyFx(S, ch[1]);
-    const res = { reply: fmt(S, ch[2]), face: ch[3] || 'neutral', deltas };
+    const res = { reply: tx(S, ch[2]), replyKey: ch[2], face: ch[3] || 'neutral', deltas };
     const x = ch[4] || {};
     if (x.set) S.flags[x.set] = true;
     if (x.risk) { const [meter, below, end] = x.risk; if (S.m[meter] < below) res.ending = end; }
@@ -153,25 +160,19 @@
 
   // ---------- microgame content ----------
   // "I'm fine" decoder: the tells point at what's really going on.
+  // The words are in the dictionaries: mood.<id>.tell0-2 / .answer, place.<id>, nope.<tag>, word.good.<n>, word.trap.<n>.
   const MOODS = [
-    { id: 'fine', face: 'happy', tells: ['humming a song', 'actually smiling', 'sent you a meme earlier'], answer: 'Great! Cup of tea?' },
-    { id: 'forgot', face: 'sus', tells: ['looking at the calendar', 'arms folded', 'said "I\'m fine" through their teeth'], answer: 'What did I forget?' },
-    { id: 'sad', face: 'sad', tells: ['quiet all evening', 'hugging a cushion', 'watching sad videos'], answer: 'Come here. Hug.' },
-    { id: 'hangry', face: 'angry', tells: ['stomach rumbling', 'opened the fridge three times', 'glaring at your sandwich'], answer: 'Snacks. Now.' },
+    { id: 'fine', face: 'happy', tells: 3 }, { id: 'forgot', face: 'sus', tells: 3 },
+    { id: 'sad', face: 'sad', tells: 3 }, { id: 'hangry', face: 'angry', tells: 3 },
   ];
   const PLACES = [
-    { n: 'Pizza place', tags: ['italian', 'heavy', 'cheese'] }, { n: 'Sushi bar', tags: ['light', 'fish'] },
-    { n: 'Chippy', tags: ['heavy', 'chips', 'fried'] }, { n: 'Curry house', tags: ['spicy', 'heavy'] },
-    { n: 'Salad café', tags: ['light', 'healthy'] }, { n: 'Burger joint', tags: ['heavy', 'chips', 'meat'] },
-    { n: 'Thai street food', tags: ['spicy', 'light'] }, { n: 'Pasta bar', tags: ['italian', 'heavy'] },
-    { n: 'Taco truck', tags: ['spicy', 'meat'] }, { n: 'Dim sum', tags: ['light', 'steamed'] },
+    { id: 'pizza', tags: ['italian', 'heavy', 'cheese'] }, { id: 'sushi', tags: ['light', 'fish'] },
+    { id: 'chippy', tags: ['heavy', 'chips', 'fried'] }, { id: 'curry', tags: ['spicy', 'heavy'] },
+    { id: 'salad', tags: ['light', 'healthy'] }, { id: 'burger', tags: ['heavy', 'chips', 'meat'] },
+    { id: 'thai', tags: ['spicy', 'light'] }, { id: 'pasta', tags: ['italian', 'heavy'] },
+    { id: 'taco', tags: ['spicy', 'meat'] }, { id: 'dimsum', tags: ['light', 'steamed'] },
   ];
-  const NOPE = {
-    italian: 'Not Italian, I had pizza at lunch.', heavy: 'Nothing heavy, I feel like a bloated walrus.', spicy: 'Nothing spicy. Remember last time?',
-    chips: 'I\'ve had chips twice this week.', fish: 'I\'m off fish since that documentary.', meat: 'I\'m trying to eat less meat.', light: 'I want proper food, not a garnish.',
-    cheese: 'No cheese. Long story.', fried: 'Nothing fried.', healthy: 'If you say salad I\'m leaving.', steamed: 'Not dumplings, I had them yesterday.',
-  };
-  // Build an "eat" round: two or three things they don't want, exactly one place that fits.
+  // Build an "eat" round: two or three things they don't want, exactly one place that fits. Returns ids; the UI looks the words up.
   function eatRound() {
     for (let tries = 0; tries < 50; tries++) {
       const opts = PLACES.slice().sort(() => R() - 0.5).slice(0, 5);
@@ -179,12 +180,12 @@
       const banned = [...new Set(opts.slice(1).flatMap(p => p.tags))].filter(t => !target.tags.includes(t));
       const hints = banned.sort(() => R() - 0.5).slice(0, 3);
       const fits = opts.filter(p => !p.tags.some(t => hints.includes(t)));
-      if (fits.length === 1 && fits[0] === target) return { options: opts.sort(() => R() - 0.5).map(p => p.n), answer: target.n, hints: hints.map(h => NOPE[h]) };
+      if (fits.length === 1 && fits[0] === target) return { options: opts.sort(() => R() - 0.5).map(p => p.id), answer: target.id, hints };
     }
-    return { options: ['Pizza place', 'Sushi bar'], answer: 'Sushi bar', hints: [NOPE.heavy] };
+    return { options: ['pizza', 'sushi'], answer: 'sushi', hints: ['heavy'] };
   }
-  const GOOD_WORDS = ['Stunning', 'Gorgeous', 'Wow', 'Incredible', 'Beautiful', 'Perfect', 'Fit', 'Smashing'];
-  const TRAP_WORDS = ['Interesting', 'Brave', 'Fine', 'Different', 'Comfy', 'Bold', 'Practical', 'Unusual', 'Is that new?', 'Nice'];
+  const GOOD_WORDS = [0, 1, 2, 3, 4, 5, 6, 7].map(i => 'word.good.' + i);
+  const TRAP_WORDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => 'word.trap.' + i);
 
   function save(S, store) { try { (store || G.localStorage).setItem(SAVE, JSON.stringify(S)); } catch (e) { /* ignore */ } }
   function load(store) { try { const s = (store || G.localStorage).getItem(SAVE); const S = s && JSON.parse(s); return S && S.v === 1 && !S.ended ? S : null; } catch (e) { return null; } }
@@ -192,5 +193,5 @@
   function saveMeta(m, store) { try { (store || G.localStorage).setItem(META, JSON.stringify(m)); } catch (e) { /* ignore */ } }
   function loadMeta(store) { try { const s = (store || G.localStorage).getItem(META); return s ? Object.assign(newMeta(), JSON.parse(s)) : newMeta(); } catch (e) { return newMeta(); } }
 
-  G.NIF = { newRun, newMeta, next, cardById, choose, preview, gameResult, useItem, finish, fmt, stageFor, checkEnd, MOODS, eatRound, GOOD_WORDS, TRAP_WORDS, save, load, wipe, saveMeta, loadMeta, GAMES, setRandom: f => { R = f; } };
+  G.NIF = { newRun, newMeta, next, cardById, choose, preview, gameResult, useItem, finish, fmt, tx, PLACES, stageFor, checkEnd, MOODS, eatRound, GOOD_WORDS, TRAP_WORDS, save, load, wipe, saveMeta, loadMeta, GAMES, setRandom: f => { R = f; } };
 })(typeof window !== 'undefined' ? window : globalThis);
